@@ -16,23 +16,58 @@ rosetta <- read_csv("./data/MarineGEO_rosetta.csv") %>%
          sensor_names = `Kor EXO/Loggernet Variable`,
          display_names = `Published variable (for Shiny)`)
 
+
 ## PAN-BDT Data ####
-# Read in line with column headers
-pan_bdt_column_headers <- read.table("./data/bocas_exosonde.dat", nrows = 1, skip = 1, sep=",",
+# Read in past data
+pan_bdt_df <- read_csv("./data/bocas_exosonde_bundle.csv")
+
+# Read in near-real time .Dat table
+column_headers <- read.table("./data/bocas_exosonde.dat", nrows = 1, skip = 1, sep=",",
                              colClasses = "character")
 
-# Read in data, assign column names, and conduct initial date formatting
-pan_bdt_df <- read.table("./data/bocas_exosonde.dat", skip = 4, sep=",")
-colnames(pan_bdt_df) <- as.character(pan_bdt_column_headers[1,])
-pan_bdt_df <- pan_bdt_df %>%
-  rename(timestamp = TIMESTAMP) %>%
-  mutate(timestamp = ymd_hms(timestamp))
+df <- read.table("./data/bocas_exosonde.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
+
+colnames(df) <- as.character(column_headers[1,])
+
+pan_bdt_df <- df %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
+  bind_rows(pan_bdt_df) %>%
+  rename(timestamp = TIMESTAMP) 
 
 # Create a lookup table that will be used to translate between loggernet attribute names and "pretty" forms for plotting
 # Results will be provided as a named list to select input modules
 pan_bdt_names <- rosetta %>%
   filter(site_code == "PAN-BDT",
          table_source == "Loggernet",
-         sensor_names %in% as.character(pan_bdt_column_headers[1,])) %>%
+         sensor_names %in% colnames(pan_bdt_df)) %>%
   select(sensor_names, display_names)
 
+## USA-MDA Data ####
+# Read in past data
+usa_mda_df <- read_csv("./data/MGEO_SERC_ExoTable_bundle.csv")
+
+# Read in near-real time .Dat table
+column_headers <- read.table("./data/MGEO_SERC_ExoTable.dat", nrows = 1, skip = 1, sep=",",
+                             colClasses = "character")
+
+df <- read.table("./data/MGEO_SERC_ExoTable.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
+
+colnames(df) <- as.character(column_headers[1,])
+
+usa_mda_df <- df %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
+  bind_rows(usa_mda_df) %>%
+  rename(timestamp = TIMESTAMP,
+         WaterTemp = Temp_C) 
+
+# Create a lookup table that will be used to translate between loggernet attribute names and "pretty" forms for plotting
+# Results will be provided as a named list to select input modules
+# SERC attributes haven't been added to rosetta yet
+# usa_mda_names <- rosetta %>%
+#   filter(#site_code == "USA-MDA",
+#          table_source == "Loggernet",
+#          sensor_names %in% colnames(usa_mda_df)) %>%
+#   select(sensor_names, display_names)
+usa_mda_names <- tibble(sensor_names = colnames(usa_mda_df),
+                        display_names = colnames(usa_mda_df)) %>%
+  mutate(display_names = ifelse(sensor_names == "WaterTemp", "Temperature (℃)", display_names))
