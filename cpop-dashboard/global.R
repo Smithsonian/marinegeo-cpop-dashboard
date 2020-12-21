@@ -36,11 +36,13 @@ pan_bdt_df <- df %>%
 
 # Create a lookup table that will be used to translate between loggernet attribute names and "pretty" forms for plotting
 # Results will be provided as a named list to select input modules
-pan_bdt_names <- rosetta %>%
+pan_bdt_names_df <- rosetta %>%
   filter(site_code == "PAN-BDT",
          table_source == "Loggernet",
          sensor_names %in% colnames(pan_bdt_df)) %>%
-  select(sensor_names, display_names)
+  select(sensor_names, display_names) %>%
+  filter(!is.na(display_names),
+         sensor_names != "RECORD")
 
 ## USA-MDA Data ####
 # Read in past data
@@ -57,17 +59,22 @@ colnames(df) <- as.character(column_headers[1,])
 usa_mda_df <- df %>%
   mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
   bind_rows(usa_mda_df) %>%
-  rename(timestamp = TIMESTAMP,
-         WaterTemp = Temp_C) 
+  rename(timestamp = TIMESTAMP) 
 
 # Create a lookup table that will be used to translate between loggernet attribute names and "pretty" forms for plotting
 # Results will be provided as a named list to select input modules
 # SERC attributes haven't been added to rosetta yet
-# usa_mda_names <- rosetta %>%
-#   filter(#site_code == "USA-MDA",
-#          table_source == "Loggernet",
-#          sensor_names %in% colnames(usa_mda_df)) %>%
-#   select(sensor_names, display_names)
-usa_mda_names <- tibble(sensor_names = colnames(usa_mda_df),
-                        display_names = colnames(usa_mda_df)) %>%
-  mutate(display_names = ifelse(sensor_names == "WaterTemp", "Temperature (℃)", display_names))
+usa_mda_names_df <- rosetta %>%
+  filter(site_code == "USA-MDA",
+         table_source == "loggernet",
+         sensor_names %in% colnames(usa_mda_df)) %>%
+  select(sensor_names, display_names) %>%
+  filter(!is.na(display_names),
+         sensor_names != "RECORD")
+
+# usa_mda_names_df <- tibble(sensor_names = colnames(usa_mda_df),
+#                         display_names = colnames(usa_mda_df)) %>%
+#   mutate(display_names = ifelse(sensor_names == "WaterTemp", "Temperature (℃)", display_names))
+
+pan_bdt_names <- setNames(pan_bdt_names_df$sensor_names, pan_bdt_names_df$display_names)
+usa_mda_names <- setNames(usa_mda_names_df$sensor_names, usa_mda_names_df$display_names)

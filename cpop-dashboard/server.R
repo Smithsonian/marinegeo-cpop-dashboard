@@ -5,6 +5,6 @@
 
 function(input, output) {
   # Module containing plotly object
-  sensorServer("plot1", pan_bdt_df)
-  sensorServer("plot2", usa_mda_df)
+  sensorServer("plot1", "WaterTemp")
+  sensorServer("plot2", "Temp_C")
 }

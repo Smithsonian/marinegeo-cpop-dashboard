@@ -3,21 +3,25 @@
 # Each module will contain a plotly object,
 # and inputs for site and attribute
 
-sensorUI <- function(id, site, site_attribute_names, site_df) {
+sensorUI <- function(id, initial_selection) {
+  
+  ns <- NS(id)
+  
   tagList(
     fluidRow(id = "plot_row",
       column(width = 3,
-             tags$br(), tags$h4(site), tags$br(), 
-             selectInput(NS(id, "attribute"), "Variable",
-                         choices = setNames(site_attribute_names$sensor_names, site_attribute_names$display_names),
-                         selected = "WaterTemp"),
              
-             dateInput(NS(id, "start_date"), label = "Update start date", 
-                       value = min(site_df$timestamp), min = min(site_df$timestamp), max = max(site_df$timestamp)),
+             tags$br(),
+
+             selectInput(ns("site"), "Site",
+                         choices = c("PAN-BDT", "USA-MDA"),
+                         selected = initial_selection),
              
-             #dateInput("start_date", label = "Update start date"),
-             selectInput(NS(id, "date_interval"), label = "Select a date interval", 
-                         choices = c("All data", "1 day", "1 week", "1 month"))
+             uiOutput(ns("attribute")),
+             uiOutput(ns("start_date")),
+             
+             selectInput(ns("date_interval"), label = "Select a date interval", 
+                         choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data"))
       ),
       
       column(width = 9, plotlyOutput(NS(id, "sensor_plot"))
@@ -27,41 +31,64 @@ sensorUI <- function(id, site, site_attribute_names, site_df) {
   )
 }
 
-sensorServer <- function(id, site_df) {
+sensorServer <- function(id, initial_selection) {
   moduleServer(id, function(input, output, session) {
     
-    date_range_max <- reactive({
+    current_site_data <- reactiveValues(df = data.frame(),
+                                        names = setNames(rosetta$sensor_names, rosetta$display_names))
+    
+    observeEvent(input$site, {
+      if(input$site == "PAN-BDT"){
+        current_site_data$df <- pan_bdt_df
+        current_site_data$names <- pan_bdt_names
+        
+      } else if(input$site == "USA-MDA"){
+        current_site_data$df <- usa_mda_df
+        current_site_data$names <- usa_mda_names
+        
+      }
+    })
+    
+    output$attribute <- renderUI({
+      selectInput(session$ns("attribute"), "Variable",
+                  choices = current_site_data$names,
+                  selected = initial_selection)
+    })
+    
+    output$start_date <- renderUI({
+      dateInput(session$ns("start_date"), label = "Update start date", 
+                value = min(current_site_data$df$timestamp), 
+                min = min(current_site_data$df$timestamp), max = max(current_site_data$df$timestamp))
+    })
+    
+    date_range <- reactive({
       
-      if(input$date_interval == "All data"){
-        return(max(site_df$timestamp))
-      } else if(input$date_interval == "1 day"){
-        return(input$start_date + hours(24))
-      } else if(input$date_interval == "1 week"){
-        return(input$start_date + weeks(1))
-      } else if(input$date_interval == "1 month"){
-        return(input$start_date + months(1))
+      if(input$date_interval == "Previous 7 days"){
+        return(c(as.Date(max(current_site_data$df$timestamp)) - weeks(1), 
+                 as.Date(max(current_site_data$df$timestamp))))
+      } else if(input$date_interval == "All data"){
+        return(c(as.Date(min(current_site_data$df$timestamp)),
+                 as.Date(max(current_site_data$df$timestamp))))
+      } else if(input$date_interval == "Previous 24 hours"){
+        return(c(as.Date(max(current_site_data$df$timestamp)) - hours(24), 
+                 as.Date(max(current_site_data$df$timestamp))))
+      } else if(input$date_interval == "Previous month"){
+        return(c(as.Date(max(current_site_data$df$timestamp)) - months(1), 
+                 as.Date(max(current_site_data$df$timestamp))))
       }
     })
     
     output$sensor_plot <- renderPlotly({
-      plot_ly(site_df, x = ~timestamp, y = ~get(input$attribute), 
+      
+      req(input$attribute)
+      
+      plot_ly(current_site_data$df, x = ~timestamp, y = ~get(input$attribute), 
               type = "scatter") %>%
         layout(yaxis = list(title = input$attribute),
                xaxis = list(title = "", 
-                            #range = c(max(site_df$timestamp) - weeks(2), max(site_df$timestamp))
-                            range = c(input$start_date, as.Date(date_range_max()))
-                            # Function does not work well with datetime marker plots
-                            # See: https://github.com/plotly/plotly.js/issues/2209
-                            # rangeselector = list(
-                            #   buttons = list(
-                            #     list(count = 24, label = "1 day", step = "hour", stepmode = "backward"),
-                            #     list(count = 7, label = "1 wk", step = "day", stepmode = "backward"),
-                            #     list(count = 14, label = "2 wk", step = "day", stepmode = "backward"),
-                            #     list(count = 1, label = "1 mo", step = "month", stepmode = "backward"),
-                            #     list(step = "all")
-                            #   ))
-                            )) %>%
-      toWebGL()  # Conversion from SVG drastically improves performance
+                            range = date_range()
+               )) %>%
+        toWebGL()  # Conversion from SVG drastically improves performance
     })
   })
 }

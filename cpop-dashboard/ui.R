@@ -16,7 +16,7 @@ fluidPage(
   windowTitle = "CPOP Visualization Dashboard"),
   
            # Module containing select input and renderPlotly call
-           sensorUI("plot1", "STRI Water Quality", pan_bdt_names, pan_bdt_df),
-           sensorUI("plot2", "SERC Water Quality", usa_mda_names, usa_mda_df)
+           sensorUI("plot1", "PAN-BDT"),
+           sensorUI("plot2", "USA-MDA")
 
 )
