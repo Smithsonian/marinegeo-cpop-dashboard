@@ -10,27 +10,36 @@ fluidPage(
                    div(id = "header_image", tags$img(src = "Logomark_MarineGEO_Tennenbaum_RGB.png", height = "50px")),
                    cellArgs = list(style = "height:60px;")
                  ),
-                 tags$style(HTML("#header_image {float:right} #title_string {margin-top:0px;}
+                 tags$style(HTML("#header_image {float:right} #title_string {margin-top:0px;}"))
                                  #header {border-bottom: 2px solid black}"))
   ),
   windowTitle = "CPOP Visualization Dashboard"),
   
 div(id = "options_div",
     splitLayout(
-      checkboxGroupInput("site_selection", "Select sites",
+      style = "border: 1px solid black;",
+      cellArgs = list(style = "padding: 20px;"),
+      
+      div(
+        checkboxGroupInput("site_selection", "Select sites",
                          choices = unique(index$site_code), selected = unique(index$site_code)),
+        actionButton("update_plot", "Update plot")
+      ),
       uiOutput("data_type"),
-      uiOutput("var_selection"),
+      #uiOutput("var_selection"),
+      selectInput("var_selection", "Select variables to plot",
+                  choices = setNames(plotting_variables$mgeo_cpop_variable_R,
+                                     plotting_variables$display_name), 
+                  selected = first(plotting_variables$mgeo_cpop_variable_R), multiple = TRUE),
       
       selectInput("date_interval", label = "Select a date interval", 
                   choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data"))
     ),
     
-    tags$head(tags$style(HTML(".shiny-split-layout > div {overflow: visible;}"))),
+    tags$head(tags$style(HTML(".shiny-split-layout > div {overflow: visible;}")))
     
-    actionButton("update_plot", "Update plot")
   ),
 
 div(id = "plot_div",
-    plotlyOutput("plot_object"))
+    plotOutput("plot_object"))
 )

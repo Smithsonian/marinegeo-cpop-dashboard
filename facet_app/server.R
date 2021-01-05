@@ -3,7 +3,7 @@
 # Ultimately, this application will allow users to display, query, and download chemical and physical sensor data including water quality and meterological data across a range of quality control levels, from raw and unprocessed to highly curated.  
 # Server script 
 
-function(input, output) {
+function(input, output, session) {
 
   current_data <- reactiveValues(df = pan_bdt_df)
   
@@ -21,70 +21,74 @@ function(input, output) {
                        choices = updateDataTypeAvailability(), selected = first(updateDataTypeAvailability()))
   })
   
-  # Update variables available to input whenever data types or sites are updated
-  updateVariableAvailability <- reactive({
-    plotting_variables %>%
-      filter(site_code %in% input$site_selection) %>%
-      pull(mgeo_cpop_variable_R, name = display_name)
-  })
+  observeEvent(input$site_selection, {
+      new_choices <- plotting_variables %>%
+        filter(site_code %in% input$site_selection) %>%
+        pull(mgeo_cpop_variable_R, name = display_name)
+      
+      updateSelectInput(session, "var_selection", choices = new_choices, selected = input$var_selection)
+    
+  }, ignoreInit = TRUE)
   
-  output$var_selection <- renderUI({
-    selectInput("var_selection", "Select variables to plot",
-                choices = updateVariableAvailability(), 
-                selected = first(updateVariableAvailability()), multiple = TRUE)
-  })
-  
-  date_range <- reactive({
+  date_filtered_df <- reactive({
     
     if(input$date_interval == "Previous 7 days"){
-      return(c(as.Date(max(current_data$df$timestamp)) - weeks(1), 
-               as.Date(max(current_data$df$timestamp))))
+      water_quality_df %>%
+        filter(timestamp >= max(timestamp) - weeks(1))
+      
     } else if(input$date_interval == "All data"){
-      return(c(as.Date(min(current_data$df$timestamp)),
-               as.Date(max(current_data$df$timestamp))))
+      water_quality_df
+      
     } else if(input$date_interval == "Previous 24 hours"){
-      return(c(as.Date(max(current_data$df$timestamp)) - hours(24), 
-               as.Date(max(current_data$df$timestamp))))
+      water_quality_df %>%
+        filter(timestamp >= max(timestamp) - hours(24))
+      
     } else if(input$date_interval == "Previous month"){
-      return(c(as.Date(max(current_data$df$timestamp)) - months(1), 
-               as.Date(max(current_data$df$timestamp))))
+      water_quality_df %>%
+        filter(timestamp >= max(timestamp) - months(1))
     }
   })
   
-  output$plot_object <- renderPlotly({
-    
-    req(input$var_selection)
-    
-    plot_list <- list()
-    
-    for(site in input$site_selection){
-      for(variable in input$var_selection){
-        df <- water_quality_df %>%
-          filter(site_code == site) 
-        
-        plot_list[[paste0(site, variable)]] <- plot_ly(
-          df, x = ~timestamp, y = ~get(variable), type = "scatter"
-        ) %>%
-          layout(yaxis = list(title = variable),
-                 xaxis = list(title = "", range = date_range())) %>%
-          toWebGL()
-      }  
-    }
-    
-    # plot_list <- list(
-    #   plot_ly(pan_bdt_df, x = ~timestamp, y = ~get(input$var_selection), 
-    #           type = "scatter") %>%
-    #     layout(yaxis = list(title = input$var_selection),
-    #            xaxis = list(title = "", range = date_range())) %>%
-    #     toWebGL(),  
-    #   
-    #   plot_ly(usa_mda_df, x = ~timestamp, y = ~get(input$var_selection), 
-    #           type = "scatter") %>%
-    #     layout(yaxis = list(title = input$var_selection),
-    #            xaxis = list(title = "", range = date_range())) %>%
-    #     toWebGL()
-    # )
-    
-    subplot(plot_list, nrows = 2, titleY = TRUE)
-  })
+  output$plot_object <- renderPlot({
+
+    tryCatch({
+      input$update_plot
+
+      isolate({
+
+        plot <- date_filtered_df() %>%
+          filter(site_code %in% input$site_selection) %>%
+          mutate(site_code = as.factor(site_code)) %>%
+          select(site_code, timestamp, input$var_selection) %>%
+          pivot_longer(cols = any_of(input$var_selection),
+                       names_to = "variable", values_to = "value", values_drop_na = TRUE) %>%
+          ggplot(aes(timestamp, value, color = site_code)) +
+          geom_point() +
+          theme_minimal() + labs(x = "", y = "", color = "Site Code") +
+          theme(legend.position = "top",
+                legend.title = element_text(size = 15),
+                legend.text = element_text(size = 15),
+                strip.text = element_text(size = 15),
+                axis.text = element_text(size = 12),
+                panel.spacing.y = unit(5, "lines")) +
+          guides(colour = guide_legend(override.aes = list(size=5)))
+
+        if(length(input$site_selection) == 1){
+          plot + facet_wrap(~variable, scales = "free", ncol = 1, 
+                            labeller = labeller(variable = formatted_plot_variables))
+
+        } else if(length(input$var_selection) == 1){
+          plot + facet_wrap(~site_code, scales = "free", ncol = 1,
+                            labeller = labeller(site_code = setNames(
+                              rep(unname(formatted_plot_variables[names(formatted_plot_variables) == input$var_selection]), 
+                                  length(input$site_selection)),input$site_selection)))
+
+        } else{
+          plot + facet_grid(variable ~ site_code, scales = "free")
+        }
+
+      })
+
+    }, error = function(e) e)
+  }, height = 600)
 }

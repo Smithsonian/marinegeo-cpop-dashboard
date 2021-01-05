@@ -6,6 +6,7 @@
 library(shiny)
 library(lubridate)
 library(readr)
+library(tidyr)
 library(dplyr)
 library(plotly)
 
@@ -45,7 +46,7 @@ names(pan_bdt_df)[na.omit(name_match)] = pan_bdt_match$mgeo_cpop_variable_R[!is.
 usa_mda_match <- rosetta %>%
   filter(site_code == "USA-MDA",
          file_source == "loggernet",
-         stop_date == "present")
+         stop_date == "Present")
 
 # Read in past data
 usa_mda_df <- read_csv("./data/MGEO_SERC_ExoTable_bundle.csv")
@@ -72,5 +73,10 @@ water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df)
 
 ## Select Input variable names
 plotting_variables <- bind_rows(pan_bdt_match, usa_mda_match) %>%
-  filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp")))
+  filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp"))) 
 
+formatted_plot_variables <- plotting_variables %>%
+  filter(site_code %in% index$site_code) %>%
+  select(mgeo_cpop_variable_R, display_name) %>%
+  distinct() %>%
+  pull(display_name, name = mgeo_cpop_variable_R)
