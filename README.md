@@ -5,7 +5,8 @@ Packages:
 shiny  
 lubridate  
 readr  
+tidyr  
 dplyr  
-plotly  
+ggplot2    
 
 Data is transferred at regular intervals (5-15 minutes) from a loggernet server to a /data subdirectory in the application folder. This method will be replaced by a direct connection to an Apache Hadoop installation where data is loaded from Apache Hive tables.

@@ -1,6 +1,5 @@
 source_dir <- "./input_data/"
-output_dir <- "./cpop-dashboard/data/"
-
+output_dir <- "./facet_app/data/"
 
 processDAT <- function(source_dir, output_dir){
   library(readr)
@@ -33,3 +32,5 @@ processDAT <- function(source_dir, output_dir){
     }
   
 }
+
+#processDAT(source_dir, output_dir)
