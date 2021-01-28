@@ -1,11 +1,12 @@
 source_dir <- "./input_data/"
-output_dir <- "./facet_app/data/"
+output_dir <- "./cpop-dashboard/data/"
 
 processDAT <- function(source_dir, output_dir){
   library(readr)
   library(dplyr)
   
-  sites <- c("bocas_exosonde", "MGEO_SERC_ExoTable")
+  sites <- c("bocas_exosonde", "MGEO_SERC_ExoTable", "MGEO_SMS_ExoTable")
+  #sites <- "MGEO_SMS_ExoTable"
   
   for(site in sites){
     ## PAN-BDT Data ####
@@ -33,4 +34,4 @@ processDAT <- function(source_dir, output_dir){
   
 }
 
-#processDAT(source_dir, output_dir)
+processDAT(source_dir, output_dir)
