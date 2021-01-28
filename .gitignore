@@ -40,7 +40,7 @@ vignettes/*.pdf
 .Rproj.user
 
 # DAT files
-.dat
+*.dat
 
 # bundle files
 *_bundle.csv
