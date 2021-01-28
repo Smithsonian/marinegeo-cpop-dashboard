@@ -7,8 +7,8 @@ fluidPage(
   titlePanel(div(id = "header",
                  splitLayout(
                    tags$h3(id = "title_string", "Chemical and Physical Observation Program Dashboard"),
-                   div(id = "header_image", tags$img(src = "Logomark_MarineGEO_Tennenbaum_RGB.png", height = "50px")),
-                   cellArgs = list(style = "height:60px;")
+                   div(id = "header_image", tags$img(src = "MarineGEO Smithsonian logo approved cropped.png", height = "80px")),
+                   cellArgs = list(style = "height:90px;")
                  ),
                  tags$style(HTML("#header_image {float:right} #title_string {margin-top:0px;}"))
                                  #header {border-bottom: 2px solid black}"))
