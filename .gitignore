@@ -45,3 +45,5 @@ cpop-dashboard/data/*.dat
 # bundle files
 *_bundle.csv
 
+# input data folder
+/input_data
