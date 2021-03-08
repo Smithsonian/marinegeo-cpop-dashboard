@@ -41,7 +41,6 @@ vignettes/*.pdf
 
 # DAT files
 cpop-dashboard/data/*.dat
-MET_STRI_Table1.dat
 
 # bundle files
 *_bundle.csv
