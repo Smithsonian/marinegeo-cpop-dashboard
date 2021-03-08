@@ -122,9 +122,4 @@ water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df, usa_irl_df) %>%
 met_df <- bind_rows(pan_bdt_df_met, usa_mda_df_met) %>%
   select(-record)
 
-print(str(water_quality_df))
-print(str(met_df))
-
 joined_df <- merge(water_quality_df, met_df, by=c("timestamp", "site_code"), all.x=T, all.y=T)
-
-print(str(joined_df))
