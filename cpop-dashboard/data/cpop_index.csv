@@ -2,3 +2,6 @@ site_code,data_type
 USA-MDA,Water Quality
 PAN-BDT,Water Quality
 USA-IRL,Water Quality
+PAN-BDT,Meteorological
+USA-MDA,Meteorological
+USA-MDA,Water Level

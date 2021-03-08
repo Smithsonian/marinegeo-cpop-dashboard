@@ -26,11 +26,10 @@ div(id = "options_div",
         actionButton("update_plot", "Update plot")
       ),
       uiOutput("data_type"),
-      #uiOutput("var_selection"),
+      
       selectInput("var_selection", "Select variables to plot",
-                  choices = setNames(plotting_variables$mgeo_cpop_variable_R,
-                                     plotting_variables$display_name), 
-                  selected = first(plotting_variables$mgeo_cpop_variable_R), multiple = TRUE),
+                  choices = initial_selections, 
+                  selected = first(initial_selections), multiple = TRUE),
       
       selectInput("date_interval", label = "Select a date interval", 
                   choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data"))

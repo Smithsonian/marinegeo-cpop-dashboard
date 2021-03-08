@@ -5,63 +5,7 @@
 
 function(input, output, session) {
 
-  ## PAN-BDT Data ####
-  # Read in near-real time .Dat table
-  column_headers <- read.table("./data/bocas_exosonde.dat", nrows = 1, skip = 1, sep=",",
-                               colClasses = "character")
-  
-  df <- read.table("./data/bocas_exosonde.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
-  
-  colnames(df) <- as.character(column_headers[1,])
-  
-  pan_bdt_df <- df %>%
-    mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
-    bind_rows(pan_bdt_df) %>%
-    mutate(site_code = "PAN-BDT")
-  
-  # Reassign column names
-  name_match = match(names(pan_bdt_df), pan_bdt_match$original_file_variable)
-  
-  names(pan_bdt_df)[na.omit(name_match)] = pan_bdt_match$mgeo_cpop_variable_R[!is.na(name_match)]
-  
-  ## USA-MDA Data ####
-  # Read in near-real time .Dat table
-  column_headers <- read.table("./data/MGEO_SERC_ExoTable.dat", nrows = 1, skip = 1, sep=",",
-                               colClasses = "character")
-  
-  df <- read.table("./data/MGEO_SERC_ExoTable.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
-  
-  colnames(df) <- as.character(column_headers[1,])
-  
-  usa_mda_df <- df %>%
-    mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
-    bind_rows(usa_mda_df) %>%
-    mutate(site_code = "USA-MDA")
-  
-  name_match = match(names(usa_mda_df), usa_mda_match$original_file_variable)
-  
-  names(usa_mda_df)[na.omit(name_match)] = usa_mda_match$mgeo_cpop_variable_R[!is.na(name_match)]
-  
-  ## USA-IRL Data ####
-  # Read in near-real time .Dat table
-  column_headers <- read.table("./data/MGEO_SMS_ExoTable.dat", nrows = 1, skip = 1, sep=",",
-                               colClasses = "character")
-  
-  df <- read.table("./data/MGEO_SMS_ExoTable.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
-  
-  colnames(df) <- as.character(column_headers[1,])
-  
-  usa_irl_df <- df %>%
-    mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
-    bind_rows(usa_irl_df) %>%
-    mutate(site_code = "USA-IRL")
-  
-  name_match = match(names(usa_irl_df), usa_irl_match$original_file_variable)
-  
-  names(usa_irl_df)[na.omit(name_match)] = usa_irl_match$mgeo_cpop_variable_R[!is.na(name_match)]
-  
-  ## Bind data ####
-  water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df, usa_irl_df)  
+  #source("./R/load_data_temporary.R")
   
   # Update data type categories available to input whenever site selection input is updated
   updateDataTypeAvailability <- reactive({
@@ -77,30 +21,40 @@ function(input, output, session) {
                        choices = updateDataTypeAvailability(), selected = first(updateDataTypeAvailability()))
   })
   
+  getUpdatedSelections <- reactive({
+    plotting_variables %>%
+      filter(data_type %in% input$data_type,
+             site_code %in% input$site_selection) %>%
+      select(mgeo_cpop_variable_R, display_name) %>%
+      distinct() %>%
+      pull(mgeo_cpop_variable_R, name = display_name)
+  })
+  
   observeEvent(input$site_selection, {
-      new_choices <- plotting_variables %>%
-        filter(site_code %in% input$site_selection) %>%
-        pull(mgeo_cpop_variable_R, name = display_name)
-      
-      updateSelectInput(session, "var_selection", choices = new_choices, selected = input$var_selection)
-    
+    updateSelectInput(session, "var_selection", choices = getUpdatedSelections(), selected = input$var_selection)
+
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$data_type, {
+    updateSelectInput(session, "var_selection", choices = getUpdatedSelections(), selected = input$var_selection)
+
   }, ignoreInit = TRUE)
   
   date_filtered_df <- reactive({
     
     if(input$date_interval == "Previous 7 days"){
-      water_quality_df %>%
+      joined_df %>%
         filter(timestamp >= max(timestamp) - weeks(1))
       
     } else if(input$date_interval == "All data"){
-      water_quality_df
+      joined_df
       
     } else if(input$date_interval == "Previous 24 hours"){
-      water_quality_df %>%
+      joined_df %>%
         filter(timestamp >= max(timestamp) - hours(24))
       
     } else if(input$date_interval == "Previous month"){
-      water_quality_df %>%
+      joined_df %>%
         filter(timestamp >= max(timestamp) - months(1))
     }
   })
