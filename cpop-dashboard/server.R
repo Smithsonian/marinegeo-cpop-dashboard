@@ -22,12 +22,26 @@ function(input, output, session) {
   })
   
   getUpdatedSelections <- reactive({
-    plotting_variables %>%
+    
+    var_list_df <- plotting_variables %>%
       filter(data_type %in% input$data_type,
              site_code %in% input$site_selection) %>%
-      select(mgeo_cpop_variable_R, display_name) %>%
-      distinct() %>%
-      pull(mgeo_cpop_variable_R, name = display_name)
+      group_by(mgeo_cpop_variable_R, display_name) %>%
+      summarize(n_sites = n(), sites = paste(site_code, collapse = ", ")) %>%
+      mutate(column_header = case_when(
+        n_sites == num_sites ~ "All sites",
+        T ~ sites
+      )) %>%
+      arrange(column_header)
+    
+    var_list <- list()
+    for(i in unique(var_list_df$column_header)){
+      var_list[[i]] <- var_list_df %>%
+        filter(column_header == i) %>%
+        pull(mgeo_cpop_variable_R, name = display_name)
+    }
+    
+    return(var_list)
   })
   
   observeEvent(input$site_selection, {

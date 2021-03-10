@@ -97,23 +97,24 @@ name_match = match(names(usa_mda_df_met), usa_mda_irl_match_met$original_file_va
 names(usa_mda_df_met) = usa_mda_irl_match_met$mgeo_cpop_variable_R[name_match]
 names(usa_mda_df_met) = c(names(usa_mda_df_met)[!is.na(names(usa_mda_df_met))], "site_code")
 
-## ... USA-IRL ####
-# MET logger hasn't recorded anything since Hurricane Maria
-# column_headers <- read.table("./data/MGEO_SMS_MetTable.dat", nrows = 1, skip = 1, sep=",",
-#                              colClasses = "character")
-# 
-# df <- read.table("./data/MGEO_SMS_MetTable.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
-# 
-# colnames(df) <- as.character(column_headers[1,])
-# 
-# usa_irl_df_met <- df %>%
-#   mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
-#   bind_rows(usa_irl_df_met) %>%
-#   mutate(site_code = "USA-IRL")
-# 
-# name_match = match(names(usa_irl_df_met), usa_mda_irl_match_met$original_file_variable)
-# names(usa_irl_df_met) = usa_mda_irl_match_met$mgeo_cpop_variable_R[name_match]
-# names(usa_irl_df_met) = c(names(usa_irl_df_met)[!is.na(names(usa_irl_df_met))], "site_code")
+## WL data ####
+
+## ... USA-MDA ####
+column_headers <- read.table("./data/MGEO_SERC_LevelTable.dat", nrows = 1, skip = 1, sep=",",
+                             colClasses = "character")
+
+df <- read.table("./data/MGEO_SERC_LevelTable.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
+
+colnames(df) <- as.character(column_headers[1,])
+
+usa_mda_df_wl <- df %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
+  bind_rows(usa_mda_df_wl) %>%
+  mutate(site_code = "USA-MDA")
+
+name_match = match(names(usa_mda_df_wl), rosetta_wl$original_file_variable)
+names(usa_mda_df_wl) = rosetta_wl$mgeo_cpop_variable_R[name_match]
+names(usa_mda_df_wl) = c(names(usa_mda_df_wl)[!is.na(names(usa_mda_df_wl))], "site_code")
 
 ## Bind data ####
 water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df, usa_irl_df) %>%
@@ -122,4 +123,8 @@ water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df, usa_irl_df) %>%
 met_df <- bind_rows(pan_bdt_df_met, usa_mda_df_met) %>%
   select(-record)
 
-joined_df <- merge(water_quality_df, met_df, by=c("timestamp", "site_code"), all.x=T, all.y=T)
+water_level_df <- usa_mda_df_wl %>%
+  select(-record)
+
+joined_df <- merge(water_quality_df, met_df, by=c("timestamp", "site_code"), all.x=T, all.y=T) %>%
+  merge(water_level_df, by=c("timestamp", "site_code"), all.x=T, all.y=T)

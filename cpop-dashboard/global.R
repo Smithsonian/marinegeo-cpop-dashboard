@@ -17,6 +17,11 @@ rosetta <- read_csv("./data/cpop_schema.csv") %>%
 rosetta_met <- read_csv("./data/met_rosetta.csv") %>%
   mutate(data_type = "Meteorological")
 
+rosetta_wl <- read_csv("./data/wl_rosetta.csv", locale = locale(encoding = "Windows-1252")) %>%
+  mutate(data_type = "Water Level") %>%
+  filter(file_source == "SERC Dock/SERC_DOCK Rawdata_Loggernet",
+         !is.na(original_file_variable))
+
 index <- read_csv("./data/cpop_index.csv")
 
 ## PAN-BDT Data ####
@@ -43,6 +48,7 @@ usa_mda_match <- rosetta %>%
 # Read in past data
 usa_mda_df <- read_csv("./data/MGEO_SERC_ExoTable_bundle.csv")
 usa_mda_df_met <- read_csv("./data/MGEO_SERC_MetTable_bundle.csv")
+usa_mda_df_wl <- read_csv("./data/MGEO_SERC_LevelTable_bundle.csv")
 
 usa_mda_irl_match_met <- rosetta_met %>%
   filter(original_file_variable %in% colnames(usa_mda_df_met),
@@ -59,9 +65,36 @@ usa_irl_match <- rosetta %>%
 usa_irl_df <- read_csv("./data/MGEO_SMS_ExoTable_bundle.csv")
 usa_irl_df_met <- read_csv("./data/MGEO_SMS_MetTable_bundle.csv")
 
+num_sites <- length(unique(index$site_code))
+
 ## Select Input variable names
-plotting_variables <- bind_rows(pan_bdt_match, usa_mda_match, usa_irl_match, pan_bdt_match_met, usa_mda_irl_match_met) %>%
-  filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp"))) 
+# Drop: BGA_PE_microg_L, Chlorophyll_microg_L, fDOM_QSU, ODO_sat, pH_mV, nLF_Cond_microS_cm(2), ODO_local
+# Many of these have another variable that is the same, but in a different unit. 
+# Removing cleans up the list of available variables
+plotting_variables <- bind_rows(pan_bdt_match, usa_mda_match, usa_irl_match, 
+                                pan_bdt_match_met, usa_mda_irl_match_met,
+                                rosetta_wl) %>%
+  filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp")),
+         !(mgeo_cpop_variable_R %in% c("BGA_PE_microg_L", "Chlorophyll_microg_L", "fDOM_QSU", 
+                                       "ODO_sat", "pH_mV", "nLF_Cond_microS_cm", "ODO_local",
+                                       "Wiper_Position_volt", "Cable_Pwr_V", "Battery_V"))) %>%
+  arrange(display_name)
+
+var_list_df <- plotting_variables %>%
+  group_by(mgeo_cpop_variable_R, display_name) %>%
+  summarize(n_sites = n(), sites = paste(site_code, collapse = ", ")) %>%
+  mutate(column_header = case_when(
+    n_sites == num_sites ~ "All sites",
+    T ~ sites
+  )) %>%
+  arrange(column_header)
+
+var_list <- list()
+for(i in unique(var_list_df$column_header)){
+  var_list[[i]] <- var_list_df %>%
+    filter(column_header == i) %>%
+    pull(mgeo_cpop_variable_R, name = display_name)
+}
 
 formatted_plot_variables <- plotting_variables %>%
   filter(site_code %in% index$site_code) %>%
@@ -69,8 +102,4 @@ formatted_plot_variables <- plotting_variables %>%
   distinct() %>%
   pull(display_name, name = mgeo_cpop_variable_R)
 
-initial_selections <- plotting_variables %>%
-  filter(data_type == "Water Quality") %>%
-  select(mgeo_cpop_variable_R, display_name) %>%
-  distinct() %>%
-  pull(mgeo_cpop_variable_R, name = display_name)
+initial_selected_variable <- "Temp_C"

@@ -28,8 +28,7 @@ div(id = "options_div",
       uiOutput("data_type"),
       
       selectInput("var_selection", "Select variables to plot",
-                  choices = initial_selections, 
-                  selected = first(initial_selections), multiple = TRUE),
+                  choices = var_list, selected = initial_selected_variable, multiple = TRUE),
       
       selectInput("date_interval", label = "Select a date interval", 
                   choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data"))
