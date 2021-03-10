@@ -3,7 +3,7 @@ An R-Shiny app to visualize and download MarineGEO CPOP data. Currently the appl
 
 Packages:  
 shiny  
-plyr
+plyr  
 lubridate  
 readr  
 tidyr  
