@@ -126,5 +126,8 @@ met_df <- bind_rows(pan_bdt_df_met, usa_mda_df_met) %>%
 water_level_df <- usa_mda_df_wl %>%
   select(-record)
 
-joined_df <- merge(water_quality_df, met_df, by=c("timestamp", "site_code"), all.x=T, all.y=T) %>%
-  merge(water_level_df, by=c("timestamp", "site_code"), all.x=T, all.y=T)
+df_list <- list(
+  "Water Quality" = water_quality_df,
+  "Meteorological" = met_df,
+  "Water Level" = water_level_df
+)

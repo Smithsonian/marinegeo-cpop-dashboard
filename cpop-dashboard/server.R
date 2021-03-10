@@ -5,7 +5,16 @@
 
 function(input, output, session) {
 
-  #source("./R/load_data_temporary.R")
+  # Store all inputs in reactive values object 
+  # RV gets passed to each module
+  selected_parameters <- reactiveValues(sites = NA, data_type = NA, vars = NA, date_interval = NA)
+  
+  observe({
+    selected_parameters$sites <- input$site_selection
+    selected_parameters$data_type <- input$data_type
+    selected_parameters$vars <- input$var_selection
+    selected_parameters$date_interval <- input$date_interval
+  })
   
   # Update data type categories available to input whenever site selection input is updated
   updateDataTypeAvailability <- reactive({
@@ -52,23 +61,20 @@ function(input, output, session) {
 
   }, ignoreInit = TRUE)
   
-  date_filtered_df <- reactive({
+  water_quality_module <- table_control_server("wq", water_quality_df, selected_parameters)
+  met_module <- table_control_server("met", met_df, selected_parameters)
+  water_level_module <- table_control_server("wl", water_level_df, selected_parameters)
+  
+  table_unification <- reactive({
+    # Bound selected data tables together and remove NULL list items
+    dat_list <- compact(list(
+      "Water Quality" = water_quality_module(),
+      "Meteorological" = met_module(),
+      "Water Level" = water_level_module()
+    ))
     
-    if(input$date_interval == "Previous 7 days"){
-      joined_df %>%
-        filter(timestamp >= max(timestamp) - weeks(1))
-      
-    } else if(input$date_interval == "All data"){
-      joined_df
-      
-    } else if(input$date_interval == "Previous 24 hours"){
-      joined_df %>%
-        filter(timestamp >= max(timestamp) - hours(24))
-      
-    } else if(input$date_interval == "Previous month"){
-      joined_df %>%
-        filter(timestamp >= max(timestamp) - months(1))
-    }
+    # Combine (row-wise) all dataframes included in list and return to plot
+    bind_rows(dat_list)
   })
   
   output$plot_object <- renderPlot({
@@ -78,12 +84,7 @@ function(input, output, session) {
 
       isolate({
 
-        plot <- date_filtered_df() %>%
-          filter(site_code %in% input$site_selection) %>%
-          mutate(site_code = as.factor(site_code)) %>%
-          select(site_code, timestamp, input$var_selection) %>%
-          pivot_longer(cols = any_of(input$var_selection),
-                       names_to = "variable", values_to = "value", values_drop_na = TRUE) %>%
+        plot <- table_unification() %>%
           ggplot(aes(timestamp, value, color = site_code)) +
           geom_point() +
           theme_minimal() + labs(x = "", y = "", color = "Site Code") +
@@ -96,13 +97,13 @@ function(input, output, session) {
           guides(colour = guide_legend(override.aes = list(size=5)))
 
         if(length(input$site_selection) == 1){
-          plot + facet_wrap(~variable, scales = "free", ncol = 1, 
+          plot + facet_wrap(~variable, scales = "free", ncol = 1,
                             labeller = labeller(variable = formatted_plot_variables))
 
         } else if(length(input$var_selection) == 1){
           plot + facet_wrap(~site_code, scales = "free", ncol = 1,
                             labeller = labeller(site_code = setNames(
-                              rep(unname(formatted_plot_variables[names(formatted_plot_variables) == input$var_selection]), 
+                              rep(unname(formatted_plot_variables[names(formatted_plot_variables) == input$var_selection]),
                                   length(input$site_selection)),input$site_selection)))
 
         } else{
@@ -113,4 +114,7 @@ function(input, output, session) {
 
     }, error = function(e) e)
   }, height = 600)
+
+  download_server("download", df_list, selected_parameters)
+  
 }
