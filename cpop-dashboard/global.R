@@ -66,7 +66,6 @@ usa_irl_match <- rosetta %>%
 
 # Read in past data
 usa_irl_df <- read_csv("./data/MGEO_SMS_ExoTable_bundle.csv")
-usa_irl_df_met <- read_csv("./data/MGEO_SMS_MetTable_bundle.csv")
 
 data_type_list <- unique(index$data_type)
 initial_selected_data_type <- "Water Quality"

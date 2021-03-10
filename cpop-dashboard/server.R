@@ -115,6 +115,7 @@ function(input, output, session) {
     }, error = function(e) e)
   }, height = 600)
 
+  # Module server for packaging download and serving as a zip folder
   download_server("download", df_list, selected_parameters)
   
 }
