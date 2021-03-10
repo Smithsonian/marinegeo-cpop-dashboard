@@ -47,3 +47,5 @@ cpop-dashboard/data/*.dat
 
 # input data folder
 /input_data
+
+cpop-dashboard/rsconnect

@@ -22,8 +22,7 @@ div(id = "options_div",
       
       div(
         checkboxGroupInput("site_selection", "Select sites",
-                         choices = unique(index$site_code), selected = unique(index$site_code)),
-        actionButton("update_plot", "Update plot")
+                         choices = unique(index$site_code), selected = unique(index$site_code))
       ),
 
       checkboxGroupInput("data_type", "Select data types",
@@ -33,7 +32,11 @@ div(id = "options_div",
                   choices = var_list, selected = initial_selected_variable, multiple = TRUE),
       
       selectInput("date_interval", label = "Select a date interval", 
-                  choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data"))
+                  choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data")),
+      
+      div(
+        actionButton("update_plot", "Update plot", class = "btn-primary"), tags$br(), tags$br(), download_UI("download")
+      )
     ),
     
     tags$head(tags$style(HTML(".shiny-split-layout > div {overflow: visible;}")))

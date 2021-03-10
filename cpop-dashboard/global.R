@@ -4,6 +4,7 @@
 # Global script runs first when initializing application
 
 library(shiny)
+library(plyr)
 library(lubridate)
 library(readr)
 library(tidyr)
