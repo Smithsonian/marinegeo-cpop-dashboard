@@ -16,11 +16,6 @@ function(input, output, session) {
       pull(data_type)
   })
   
-  output$data_type <- renderUI({
-    checkboxGroupInput("data_type", "Select data types",
-                       choices = updateDataTypeAvailability(), selected = first(updateDataTypeAvailability()))
-  })
-  
   getUpdatedSelections <- reactive({
     
     var_list_df <- plotting_variables %>%
@@ -45,6 +40,9 @@ function(input, output, session) {
   })
   
   observeEvent(input$site_selection, {
+    checkboxGroupInput("data_type", "Select data types",
+                       choices = updateDataTypeAvailability(), selected = input$data_type)
+    
     updateSelectInput(session, "var_selection", choices = getUpdatedSelections(), selected = input$var_selection)
 
   }, ignoreInit = TRUE)

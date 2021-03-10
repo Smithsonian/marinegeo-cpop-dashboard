@@ -1,0 +1,13 @@
+site_code,site_units,original_file_variable,mgeo_cpop_variable_R,display_name,what_it_actually_means,units_actual,start_date,stop_date,file_source,notes,instrument,data_type
+PAN-BDT,mBar,BP_mbar_Avg,barometric_pressure_avg_mBar,Average Barometric Pressure (mBar),NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,mmHg,BP_mmHg_Avg,barometric_pressure_avg_mmHg,Average Barometric Pressure (mmHg),NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,V,BattV_Avg,battery_avg_V,Battery Average (V),NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,NA,PBID,PBID,PBID,NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,0/1,Radar_validity,radar_validity,Radar Validity (0/1),NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,On/Off,Switch_low_Avg,switch_low_avg,Average Switch Low,NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,On/Off,Switch_upp_Avg,switch_upp_avg,Average Switch UPP,NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,m,Wdepth_Avg,w_depth_avg_m,Average Water Depth (m),NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,m,Wdistance_Avg,w_distance_avg_m,Average Water Distance (m),NA,NA,11/17/2014,3/18/2019,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,NA,RECORD,record,Record,NA,NA,5/30/2019,present,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,YYYY-mm-dd HH:mm:ss,TIMESTAMP,timestamp,Timestamp,NA,NA,5/30/2019,present,Marine_GEO_CPOP_PROCESSING/RitterEdits/STRI,NA,NA,Water Level
+PAN-BDT,,Wtemp_Avg,w_temp_avg,Average Water Temperature (°C),,,,,,,,

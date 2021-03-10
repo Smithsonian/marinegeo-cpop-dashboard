@@ -25,7 +25,9 @@ div(id = "options_div",
                          choices = unique(index$site_code), selected = unique(index$site_code)),
         actionButton("update_plot", "Update plot")
       ),
-      uiOutput("data_type"),
+
+      checkboxGroupInput("data_type", "Select data types",
+                         choices = data_type_list, selected = initial_selected_data_type),
       
       selectInput("var_selection", "Select variables to plot",
                   choices = var_list, selected = initial_selected_variable, multiple = TRUE),

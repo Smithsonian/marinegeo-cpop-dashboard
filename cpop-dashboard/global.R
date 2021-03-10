@@ -18,9 +18,7 @@ rosetta_met <- read_csv("./data/met_rosetta.csv") %>%
   mutate(data_type = "Meteorological")
 
 rosetta_wl <- read_csv("./data/wl_rosetta.csv", locale = locale(encoding = "Windows-1252")) %>%
-  mutate(data_type = "Water Level") %>%
-  filter(file_source == "SERC Dock/SERC_DOCK Rawdata_Loggernet",
-         !is.na(original_file_variable))
+  mutate(data_type = "Water Level") 
 
 index <- read_csv("./data/cpop_index.csv")
 
@@ -50,6 +48,10 @@ usa_mda_df <- read_csv("./data/MGEO_SERC_ExoTable_bundle.csv")
 usa_mda_df_met <- read_csv("./data/MGEO_SERC_MetTable_bundle.csv")
 usa_mda_df_wl <- read_csv("./data/MGEO_SERC_LevelTable_bundle.csv")
 
+rosetta_wl_usa_mda <- rosetta_wl %>%
+  filter(file_source == "SERC Dock/SERC_DOCK Rawdata_Loggernet",
+         !is.na(original_file_variable))
+
 usa_mda_irl_match_met <- rosetta_met %>%
   filter(original_file_variable %in% colnames(usa_mda_df_met),
          stop_date == "present",
@@ -65,6 +67,8 @@ usa_irl_match <- rosetta %>%
 usa_irl_df <- read_csv("./data/MGEO_SMS_ExoTable_bundle.csv")
 usa_irl_df_met <- read_csv("./data/MGEO_SMS_MetTable_bundle.csv")
 
+data_type_list <- unique(index$data_type)
+initial_selected_data_type <- "Water Quality"
 num_sites <- length(unique(index$site_code))
 
 ## Select Input variable names
@@ -73,7 +77,7 @@ num_sites <- length(unique(index$site_code))
 # Removing cleans up the list of available variables
 plotting_variables <- bind_rows(pan_bdt_match, usa_mda_match, usa_irl_match, 
                                 pan_bdt_match_met, usa_mda_irl_match_met,
-                                rosetta_wl) %>%
+                                rosetta_wl_usa_mda) %>%
   filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp")),
          !(mgeo_cpop_variable_R %in% c("BGA_PE_microg_L", "Chlorophyll_microg_L", "fDOM_QSU", 
                                        "ODO_sat", "pH_mV", "nLF_Cond_microS_cm", "ODO_local",

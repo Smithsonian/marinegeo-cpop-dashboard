@@ -112,8 +112,8 @@ usa_mda_df_wl <- df %>%
   bind_rows(usa_mda_df_wl) %>%
   mutate(site_code = "USA-MDA")
 
-name_match = match(names(usa_mda_df_wl), rosetta_wl$original_file_variable)
-names(usa_mda_df_wl) = rosetta_wl$mgeo_cpop_variable_R[name_match]
+name_match = match(names(usa_mda_df_wl), rosetta_wl_usa_mda$original_file_variable)
+names(usa_mda_df_wl) = rosetta_wl_usa_mda$mgeo_cpop_variable_R[name_match]
 names(usa_mda_df_wl) = c(names(usa_mda_df_wl)[!is.na(names(usa_mda_df_wl))], "site_code")
 
 ## Bind data ####
