@@ -4,18 +4,23 @@
 # Server script 
 
 function(input, output, session) {
-
+  
   # Store all inputs in reactive values object 
   # RV gets passed to each module
-  selected_parameters <- reactiveValues(sites = NA, data_type = NA, vars = NA, date_interval = NA)
-  
+  selected_parameters <- reactiveValues(sites = NA, data_type = NA, vars = NA, date_interval = initial_date_range_value)
+
   observe({
     selected_parameters$sites <- input$site_selection
     selected_parameters$data_type <- input$data_type
     selected_parameters$vars <- input$var_selection
-    selected_parameters$date_interval <- input$date_interval
+    
+    if(!is.null(input$date_interval)){
+      selected_parameters$date_interval <- input$date_interval
+    }
+    
   })
   
+  ## Reactives for updating inputs ####
   # Update data type categories available to input whenever site selection input is updated
   updateDataTypeAvailability <- reactive({
     index %>%
@@ -49,7 +54,7 @@ function(input, output, session) {
   })
   
   observeEvent(input$site_selection, {
-    checkboxGroupInput("data_type", "Select data types",
+    checkboxGroupInput("data_type", "Data types",
                        choices = updateDataTypeAvailability(), selected = input$data_type)
     
     updateSelectInput(session, "var_selection", choices = getUpdatedSelections(), selected = input$var_selection)
@@ -61,6 +66,20 @@ function(input, output, session) {
 
   }, ignoreInit = TRUE)
   
+  
+  # Render UI for date selection modes
+  output$date_selection <- renderUI({
+    
+    if(!input$toggle_date_mode){
+      selectInput("date_interval", label = "Date interval", 
+                  choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data"))
+    } else {
+      dateRangeInput("date_interval", label = "Date range")
+    }
+    
+  })
+  
+  ## Data table modules and plot ####
   water_quality_module <- table_control_server("wq", water_quality_df, selected_parameters)
   met_module <- table_control_server("met", met_df, selected_parameters)
   water_level_module <- table_control_server("wl", water_level_df, selected_parameters)
@@ -77,17 +96,35 @@ function(input, output, session) {
     bind_rows(dat_list)
   })
   
+  # Single zoomable plot (on left)
+  # Disabled y range, all facets will only be zoomed by x axis
+  ranges <- reactiveValues(x = NULL, y = NULL)
+  
+  # When a double-click happens, check if there's a brush on the plot.
+  # If so, zoom to the brush bounds; if not, reset the zoom.
+  observeEvent(input$plot_dblclick, {
+    
+    brush <- input$plot_brush
+    if (!is.null(brush)) {
+      ranges$x <- c(as.POSIXct(brush$xmin, origin = "1970-01-01"), as.POSIXct(brush$xmax, origin = "1970-01-01"))
+    } else {
+      ranges$x <- NULL
+    }
+  })
+  
   output$plot_object <- renderPlot({
 
-    tryCatch({
+    #tryCatch({
       input$update_plot
-
+      input$plot_dblclick
+      
       isolate({
 
         plot <- table_unification() %>%
           ggplot(aes(timestamp, value, color = site_code)) +
           geom_point() +
           theme_minimal() + labs(x = "", y = "", color = "Site Code") +
+          coord_cartesian(xlim = ranges$x) +
           theme(legend.position = "top",
                 legend.title = element_text(size = 15),
                 legend.text = element_text(size = 15),
@@ -97,25 +134,26 @@ function(input, output, session) {
           guides(colour = guide_legend(override.aes = list(size=5)))
 
         if(length(input$site_selection) == 1){
-          plot + facet_wrap(~variable, scales = "free", ncol = 1,
+          plot + facet_wrap(~variable, scales = "free_y", ncol = 1,
                             labeller = labeller(variable = formatted_plot_variables))
 
         } else if(length(input$var_selection) == 1){
-          plot + facet_wrap(~site_code, scales = "free", ncol = 1,
+          plot + facet_wrap(~site_code, scales = "free_y", ncol = 1,
                             labeller = labeller(site_code = setNames(
                               rep(unname(formatted_plot_variables[names(formatted_plot_variables) == input$var_selection]),
                                   length(input$site_selection)),input$site_selection)))
 
         } else{
-          plot + facet_grid(variable ~ site_code, scales = "free")
+          plot + facet_grid(variable ~ site_code, scales = "free_y")
         }
 
       })
 
-    }, error = function(e) e)
+  #  }, error = function(e) e)
   }, height = 600)
 
+  ## Download ####
   # Module server for packaging download and serving as a zip folder
-  download_server("download", df_list, selected_parameters)
+  download_server("download", df_list, selected_parameters, data_dictionary)
   
 }

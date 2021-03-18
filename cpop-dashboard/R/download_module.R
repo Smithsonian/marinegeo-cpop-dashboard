@@ -7,12 +7,18 @@ download_UI <- function(id){
 }
 
 
-download_server <- function(id, df_list, selected_parameters){
+download_server <- function(id, df_list, selected_parameters, data_dictionary){
   
   moduleServer(id, function(input, output, session) {
     
     filter_date <- function(df){
-      if(selected_parameters$date_interval == "Previous 7 days"){
+      
+      if(is.Date(selected_parameters$date_interval[1])){
+        df %>%
+          filter(timestamp >= selected_parameters$date_interval[1],
+                 timestamp <= selected_parameters$date_interval[2])
+        
+      } else if(selected_parameters$date_interval == "Previous 7 days"){
         df %>%
           filter(timestamp >= max(timestamp) - weeks(1))
         
@@ -26,7 +32,7 @@ download_server <- function(id, df_list, selected_parameters){
       } else if(selected_parameters$date_interval == "Previous month"){
         df %>%
           filter(timestamp >= max(timestamp) - months(1))
-      }
+      } 
     }
     
     output$download <- downloadHandler(
@@ -50,34 +56,53 @@ download_server <- function(id, df_list, selected_parameters){
         # # Write readme
         fs <- c()
         
+        # Vector of columns included in the download
+        included_cols <- c()
+        
         if("Water Quality" %in% selected_parameters$data_type){
           df <- filter_date(df_list[["Water Quality"]]) %>%
-            filter(site_code %in% selected_parameters$sites) 
+            dplyr::filter(site_code %in% selected_parameters$sites) %>%
+            dplyr::select_if(all_na_test)
+          
           
           path <- "marinegeo_water_quality_data.csv"
           fs <- c(fs, path)
           write_csv(df, path)
+          
+          included_cols <- c(included_cols, colnames(df))
         }
         
         if("Water Level" %in% selected_parameters$data_type){
           df <- filter_date(df_list[["Water Level"]]) %>%
-            filter(site_code %in% selected_parameters$sites) 
+            dplyr::filter(site_code %in% selected_parameters$sites) %>%
+            dplyr::select_if(all_na_test)
           
           path <- "marinegeo_water_level_data.csv"
           fs <- c(fs, path)
           write_csv(df, path)
           
+          included_cols <- c(included_cols, colnames(df))
+          
         }
         
         if("Meteorological" %in% selected_parameters$data_type){
           df <- filter_date(df_list[["Meteorological"]]) %>%
-            filter(site_code %in% selected_parameters$sites) 
+            dplyr::filter(site_code %in% selected_parameters$sites) %>%
+            dplyr::select_if(all_na_test)
           
           path <- "marinegeo_meteorological_data.csv"
           fs <- c(fs, path)
           write_csv(df, path)
           
+          included_cols <- c(included_cols, colnames(df))
         }
+        
+        custom_dictionary <- data_dictionary %>%
+          dplyr::filter(parameter_name %in% included_cols)
+        
+        path <- "data_dictionary.csv"
+        fs <- c(fs, path)
+        write_csv(custom_dictionary, path)
         
         # Zip the files together
         zip(zipfile=fname, files=fs)

@@ -21,18 +21,23 @@ div(id = "options_div",
       cellArgs = list(style = "padding: 20px;"),
       
       div(
-        checkboxGroupInput("site_selection", "Select sites",
+        checkboxGroupInput("site_selection", "Sites",
                          choices = unique(index$site_code), selected = unique(index$site_code))
       ),
 
-      checkboxGroupInput("data_type", "Select data types",
+      checkboxGroupInput("data_type", "Data types",
                          choices = data_type_list, selected = initial_selected_data_type),
       
-      selectInput("var_selection", "Select variables to plot",
+      selectInput("var_selection", "Variables to plot",
                   choices = var_list, selected = initial_selected_variable, multiple = TRUE),
       
-      selectInput("date_interval", label = "Select a date interval", 
-                  choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data")),
+      div(
+      uiOutput("date_selection"),
+      
+      checkboxInput("toggle_date_mode", "Enter custom date range", value = FALSE)
+      ),
+      # selectInput("date_interval", label = "Select a date interval", 
+      #             choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data")),
       
       div(
         actionButton("update_plot", "Update plot", class = "btn-primary"), tags$br(), tags$br(), download_UI("download")
@@ -44,5 +49,10 @@ div(id = "options_div",
   ),
 
 div(id = "plot_div",
-    plotOutput("plot_object"))
+    plotOutput("plot_object",
+               dblclick = "plot_dblclick",
+               brush = brushOpts(
+                 id = "plot_brush",
+                 resetOnNew = TRUE
+               )))
 )

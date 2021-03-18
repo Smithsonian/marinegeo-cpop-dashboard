@@ -75,14 +75,25 @@ num_sites <- length(unique(index$site_code))
 # Drop: BGA_PE_microg_L, Chlorophyll_microg_L, fDOM_QSU, ODO_sat, pH_mV, nLF_Cond_microS_cm(2), ODO_local
 # Many of these have another variable that is the same, but in a different unit. 
 # Removing cleans up the list of available variables
-plotting_variables <- bind_rows(pan_bdt_match, usa_mda_match, usa_irl_match, 
+formatted_schema <- bind_rows(pan_bdt_match, usa_mda_match, usa_irl_match, 
                                 pan_bdt_match_met, usa_mda_irl_match_met,
                                 rosetta_wl_usa_mda) %>%
-  filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp")),
-         !(mgeo_cpop_variable_R %in% c("BGA_PE_microg_L", "Chlorophyll_microg_L", "fDOM_QSU", 
+  filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp")))
+
+plotting_variables <- formatted_schema %>%
+  filter(!(mgeo_cpop_variable_R %in% c("BGA_PE_microg_L", "Chlorophyll_microg_L", "fDOM_QSU", 
                                        "ODO_sat", "pH_mV", "nLF_Cond_microS_cm", "ODO_local",
                                        "Wiper_Position_volt", "Cable_Pwr_V", "Battery_V"))) %>%
   arrange(display_name)
+
+data_dictionary <- formatted_schema %>%
+  select(-c(site_code, site_units,original_file_variable, what_it_actually_means, units_actual,
+            start_date, stop_date, file_source, notes, instrument)) %>%
+  distinct() %>%
+  separate(display_name, into = c("drop", "unit"), sep = "\\(", remove = FALSE) %>%
+  select(-drop) %>%
+  mutate(unit = gsub(")", "", unit)) %>%
+  rename(parameter_name = mgeo_cpop_variable_R)
 
 var_list_df <- plotting_variables %>%
   group_by(mgeo_cpop_variable_R, display_name) %>%
@@ -107,3 +118,10 @@ formatted_plot_variables <- plotting_variables %>%
   pull(display_name, name = mgeo_cpop_variable_R)
 
 initial_selected_variable <- "Temp_C"
+initial_date_range_value <- "Previous 7 days"
+
+# Used to remove columns that are all NA
+all_na_test <- function(x){
+  # Check if all values are NA
+  any(!is.na(x))
+}

@@ -9,7 +9,12 @@ table_control_server <- function(id, df, selected_parameters){
     # Filter data frame based on selected time interval
     date_filtered_df <- reactive({
       
-      if(selected_parameters$date_interval == "Previous 7 days"){
+      if(is.Date(selected_parameters$date_interval[1])){
+        df %>%
+          filter(timestamp >= selected_parameters$date_interval[1],
+                 timestamp <= selected_parameters$date_interval[2])
+        
+      } else if(selected_parameters$date_interval == "Previous 7 days"){
         df %>%
           filter(timestamp >= max(timestamp) - weeks(1))
         
@@ -23,7 +28,7 @@ table_control_server <- function(id, df, selected_parameters){
       } else if(selected_parameters$date_interval == "Previous month"){
         df %>%
           filter(timestamp >= max(timestamp) - months(1))
-      }
+      } 
       
     })
     
