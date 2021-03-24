@@ -21,6 +21,9 @@ rosetta_met <- read_csv("./data/met_rosetta.csv") %>%
 rosetta_wl <- read_csv("./data/wl_rosetta.csv", locale = locale(encoding = "Windows-1252")) %>%
   mutate(data_type = "Water Level") 
 
+rosetta_wl_panbdt <- read_csv("./data/wl_rosetta_panbdt.csv", locale = locale(encoding = "Windows-1252")) %>%
+  mutate(data_type = "Water Level")
+
 index <- read_csv("./data/cpop_index.csv")
 
 ## PAN-BDT Data ####
@@ -37,6 +40,7 @@ pan_bdt_match_met <- rosetta_met %>%
 # Read in past data
 pan_bdt_df <- read_csv("./data/bocas_exosonde_bundle.csv")
 pan_bdt_df_met <- read_csv("./data/MET_STRI_Table1_bundle.csv")
+pan_bdt_df_wl <- read_csv("./data/Bocas_MGeo_Tide_bundle.csv")
 
 ## USA-MDA Data ####
 usa_mda_match <- rosetta %>%
@@ -76,7 +80,7 @@ num_sites <- length(unique(index$site_code))
 # Many of these have another variable that is the same, but in a different unit. 
 # Removing cleans up the list of available variables
 formatted_schema <- bind_rows(pan_bdt_match, usa_mda_match, usa_irl_match, 
-                                pan_bdt_match_met, usa_mda_irl_match_met,
+                                pan_bdt_match_met, usa_mda_irl_match_met, rosetta_wl_panbdt,
                                 rosetta_wl_usa_mda) %>%
   filter(!(display_name %in% c("Not published", "Date", "Time", "Record", "Timestamp")))
 

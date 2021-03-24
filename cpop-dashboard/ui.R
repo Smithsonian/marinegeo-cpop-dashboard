@@ -40,7 +40,9 @@ div(id = "options_div",
       #             choices = c("Previous 7 days", "Previous month", "Previous 24 hours", "All data")),
       
       div(
-        actionButton("update_plot", "Update plot", class = "btn-primary"), tags$br(), tags$br(), download_UI("download")
+        actionButton("update_plot", "Update plot", class = "btn-primary"), tags$br(), tags$br(), 
+        download_UI("download"),
+        actionLink("about", label = "About this data")
       )
     ),
     

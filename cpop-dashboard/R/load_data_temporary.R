@@ -116,6 +116,24 @@ name_match = match(names(usa_mda_df_wl), rosetta_wl_usa_mda$original_file_variab
 names(usa_mda_df_wl) = rosetta_wl_usa_mda$mgeo_cpop_variable_R[name_match]
 names(usa_mda_df_wl) = c(names(usa_mda_df_wl)[!is.na(names(usa_mda_df_wl))], "site_code")
 
+## ... PAN-BDT ####
+column_headers <- read.table("./data/Bocas_MGeo_Tide.dat", nrows = 1, skip = 1, sep=",",
+                             colClasses = "character")
+
+df <- read.table("./data/Bocas_MGeo_Tide.dat", skip = 4, sep=",", na.strings = c("NA", "NAN"))
+
+colnames(df) <- as.character(column_headers[1,])
+
+pan_bdt_df_wl <- df %>%
+  mutate(TIMESTAMP = ymd_hms(TIMESTAMP)) %>%
+  bind_rows(pan_bdt_df_wl) %>%
+  mutate(site_code = "PAN-BDT") %>%
+  distinct()
+
+name_match = match(names(pan_bdt_df_wl), rosetta_wl_panbdt$original_file_variable)
+names(pan_bdt_df_wl) = rosetta_wl_panbdt$mgeo_cpop_variable_R[name_match]
+names(pan_bdt_df_wl) = c(names(pan_bdt_df_wl)[!is.na(names(pan_bdt_df_wl))], "site_code")
+
 ## Bind data ####
 water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df, usa_irl_df) %>%
   select(-Record)
@@ -123,7 +141,7 @@ water_quality_df <- bind_rows(usa_mda_df, pan_bdt_df, usa_irl_df) %>%
 met_df <- bind_rows(pan_bdt_df_met, usa_mda_df_met) %>%
   select(-record)
 
-water_level_df <- usa_mda_df_wl %>%
+water_level_df <- bind_rows(usa_mda_df_wl, pan_bdt_df_wl) %>%
   select(-record)
 
 df_list <- list(

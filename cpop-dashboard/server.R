@@ -144,7 +144,9 @@ function(input, output, session) {
                                   length(input$site_selection)),input$site_selection)))
 
         } else{
-          plot + facet_grid(variable ~ site_code, scales = "free_y")
+          # Not sure this makes much sense.. might as well just combine all sites into a single plot
+          plot + facet_grid(variable ~ site_code, scales = "free_y", 
+                            labeller = labeller(variable = formatted_plot_variables[names(formatted_plot_variables) %in% input$var_selection]))
         }
 
       })
@@ -152,6 +154,20 @@ function(input, output, session) {
   #  }, error = function(e) e)
   }, height = 600)
 
+  ## About this data link ####
+  observeEvent(input$about, {
+    showModal(modalDialog(
+      title = "About",
+      div(
+        "All data available is raw, unprocessed data (Level 0). ",  
+        "Data processed according to quality control protocols will be available in this application soon. "
+      ),
+      easyClose = TRUE
+    ))
+    
+  })
+
+  
   ## Download ####
   # Module server for packaging download and serving as a zip folder
   download_server("download", df_list, selected_parameters, data_dictionary)

@@ -62,8 +62,9 @@ download_server <- function(id, df_list, selected_parameters, data_dictionary){
         if("Water Quality" %in% selected_parameters$data_type){
           df <- filter_date(df_list[["Water Quality"]]) %>%
             dplyr::filter(site_code %in% selected_parameters$sites) %>%
-            dplyr::select_if(all_na_test)
-          
+            dplyr::select_if(all_na_test) %>%
+            dplyr::select(site_code, timestamp, everything()) %>%
+            dplyr::select(-c(Date_MM_DD_YYYY, Time_HH_mm_ss, sn, snn))
           
           path <- "marinegeo_water_quality_data.csv"
           fs <- c(fs, path)
@@ -75,7 +76,8 @@ download_server <- function(id, df_list, selected_parameters, data_dictionary){
         if("Water Level" %in% selected_parameters$data_type){
           df <- filter_date(df_list[["Water Level"]]) %>%
             dplyr::filter(site_code %in% selected_parameters$sites) %>%
-            dplyr::select_if(all_na_test)
+            dplyr::select_if(all_na_test) %>%
+            dplyr::select(site_code, timestamp, everything())
           
           path <- "marinegeo_water_level_data.csv"
           fs <- c(fs, path)
@@ -88,7 +90,8 @@ download_server <- function(id, df_list, selected_parameters, data_dictionary){
         if("Meteorological" %in% selected_parameters$data_type){
           df <- filter_date(df_list[["Meteorological"]]) %>%
             dplyr::filter(site_code %in% selected_parameters$sites) %>%
-            dplyr::select_if(all_na_test)
+            dplyr::select_if(all_na_test) %>%
+            dplyr::select(site_code, timestamp, everything())
           
           path <- "marinegeo_meteorological_data.csv"
           fs <- c(fs, path)
