@@ -38,14 +38,3 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .Rproj.user
-
-# DAT files
-cpop-dashboard/data/*.dat
-
-# bundle files
-*_bundle.csv
-
-# input data folder
-/input_data
-
-cpop-dashboard/rsconnect
