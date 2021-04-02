@@ -31,7 +31,7 @@ download_server <- function(id, df_list, selected_parameters, data_dictionary){
         
       } else if(selected_parameters$date_interval == "Previous month"){
         df %>%
-          filter(timestamp >= max(timestamp) - months(1))
+          filter(timestamp >= max(timestamp) %m-% months(1))
       } 
     }
     
